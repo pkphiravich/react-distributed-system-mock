@@ -1,5 +1,8 @@
 # 🎫 Simulated Distributed System (React Router SPA)
 
+🇺🇸 **English** | [🇹🇭 อ่านภาษาไทยที่นี่](README_TH.md)
+---
+
 A lightweight yet conceptual project designed to visualize high-level distributed systems and infrastructure concepts—such as **Apache Kafka**, **Kubernetes (K8s)**, and **Docker Containers**—all within a single-page React application (SPA).
 
 ---
