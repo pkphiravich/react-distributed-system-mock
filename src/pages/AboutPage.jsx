@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function AboutPage() {
   return (
     <div style={{ padding: "20px", background: "#f8f9fa", borderRadius: "8px" }}>

@@ -1,27 +1,28 @@
-import React from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-
-// 📄 นำเข้าหน้าหลักทั้งสอง ที่เราได้ทำการหั่นแยกบ้านไปเมื่อครู่นี้
+import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 import BookingPage from "./pages/BookingPage";
 import AboutPage from "./pages/AboutPage";
+import NotFound from "./pages/NotFound";
+
+function navStyle({ isActive }) {
+  return isActive ? { fontWeight: "bold", textDecoration: "underline" } : {};
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <div style={{ padding: "20px", fontFamily: "sans-serif", maxWidth: "900px", margin: "0 auto" }}>
-        
+      <div className="app-shell">
         <h2>🎫 ระบบจองตั๋วจำลอง Distributed System (SPA)</h2>
-        <nav>
-          <Link to="/">หน้าจองตั๋ว</Link> | <Link to="/about">คำอธิบายระบบ</Link>
+        <nav className="app-nav" aria-label="Main navigation">
+          <NavLink to="/" end style={navStyle}>หน้าจองตั๋ว</NavLink>
+          {" | "}
+          <NavLink to="/about" style={navStyle}>คำอธิบายระบบ</NavLink>
         </nav>
         <hr />
-
-        {/* โค้ดสั้นลงและทำหน้าที่จัดการทิศทางอย่างเดียวชัดเจน */}
         <Routes>
           <Route path="/" element={<BookingPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
-
       </div>
     </BrowserRouter>
   );
