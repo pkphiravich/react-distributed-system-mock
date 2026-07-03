@@ -1,41 +1,131 @@
-# 🎫 Simulated Distributed System (React Router SPA)
+# Distributed System Simulator — React SPA
 
-🇺🇸 **English** | [🇹🇭 อ่านภาษาไทยที่นี่](README_TH.md)
----
-
-A lightweight yet conceptual project designed to visualize high-level distributed systems and infrastructure concepts—such as **Apache Kafka**, **Kubernetes (K8s)**, and **Docker Containers**—all within a single-page React application (SPA).
+🇺🇸 **English** | [🇹🇭 ภาษาไทย](README_TH.md)
 
 ---
 
-## Concept Overview
-Understanding server-side concepts like **High Concurrency**, **Message Queues**, or **Infrastructure Scaling** can be challenging in theory. This project leverages React state management and React Router v6 to mock these complex distributed system architectures into interactive visual logs and real-time structural graphs—understandable **at first glance!**
+A production-inspired, interactive visualization of distributed backend infrastructure built with React. This project simulates the runtime behavior of **Apache Kafka**, **Kubernetes (K8s)**, and **containerized microservices** — without requiring any backend, cloud account, or DevOps toolchain.
+
+Designed as an educational tool for developers who want to build an intuition for how high-concurrency systems behave under load, failure, and recovery conditions.
 
 ---
 
-## Interactive Features (How to Play)
-Once the project is running locally, you can trigger and observe key architectural behaviors:
+## Architecture
 
-1. **🎟️ Book Concert Ticket (High Concurrency Simulation):** Clicking this initiates an asynchronous task. The request is immediately dispatched into the **Apache Kafka queue (Orange Box)**, which responds with an instant mock `202 Accepted` status to prevent UI freezing. The consumer later processes the orders background sequentially.
-2. **⚡ Stress Test (Clicking "Book Ticket" Repetitively):** When the Kafka topic accumulates a backlog, the simulated **Kubernetes cluster triggers Horizontal Pod Autoscaling (HPA)**, spinning up additional mock backend server instances (Blue Containers) to balance the high workload.
-3. **💥 Simulate Server Crash (Self-Healing Mechanisms):** Clicking the red button forces the main server node to crash (mocking an internal `500 Server Error`). Within 1.5 seconds, the simulated **Kubernetes orchestrator automatically detects the failure and self-heals**, restarting a brand new container instance to restore high availability.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        React SPA (Client)                    │
+│                                                             │
+│   User Action                                               │
+│       │                                                     │
+│       ▼                                                     │
+│  [ Kafka Queue ]  ──────────────►  [ Kubernetes Cluster ]  │
+│  (Message Broker)                  (Pod Orchestration)      │
+│  • Async ingestion                 • HPA auto-scaling       │
+│  • 202 Accepted                    • Self-healing           │
+│  • Consumer loop                   • Load distribution      │
+│                                                             │
+│   Booking Counter tracks total tickets booked               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+All simulation state is managed in a custom `useSimulation` hook. No external APIs or backend services are required.
 
 ---
 
-## Core Concepts Covered
-* **Front-end Client-Side Routing:** React Router v6 (SPA State Preservation)
-* **Message Brokering & Event Streaming:** Apache Kafka (Publish-Subscribe Pattern)
-* **Container Orchestration:** Kubernetes (Auto-scaling, Self-healing, Fault Tolerance)
-* **Development Workflow:** Vite Hot Module Replacement (HMR) with File Polling
+## Features
+
+### 🎟️ Ticket Booking with Live Counter
+Each click on **"จองตั๋วคอนเสิร์ต"** enqueues an async booking request into the Kafka topic and increments a persistent booking counter, reflecting the total tickets booked across the session.
+
+### ⚡ Horizontal Pod Autoscaling (HPA)
+When queue depth exceeds the configurable HPA threshold, Kubernetes automatically provisions additional backend pods (`Pending → Running`) to absorb the surge. Pods scale back down once the queue drains.
+
+### 💥 Crash & Self-Healing
+Triggering a server crash sets a pod to `Terminating`, removes it, and re-provisions a replacement automatically — demonstrating Kubernetes liveness probe and restart behavior within 1.5 seconds.
+
+### 📊 Configurable Simulation Parameters
+- **Consumer speed** — adjust Kafka consumer processing interval (0.5s – 5s)
+- **HPA threshold** — set the queue depth that triggers scale-up (2 – 5 items)
+
+### 📝 Persistent Activity Log
+All system events (bookings, scale-up/down, crashes, recoveries) are logged with Thai-locale timestamps and persisted to `localStorage` across page refreshes.
 
 ---
 
-## 📦 Getting Started
+## Tech Stack
 
-To spin up this laboratory setup in your local environment, run the following commands:
+| Layer | Technology |
+|---|---|
+| Framework | React 19 (Hooks-based, no class components) |
+| Routing | React Router v6 (client-side SPA) |
+| Build Tool | Vite 6 (HMR, file polling for WSL/Windows) |
+| Styling | Vanilla CSS (design tokens, dark theme, BEM) |
+| State | `useState`, `useRef`, `useCallback`, `useEffect` |
+| Persistence | `localStorage` (log history) |
+
+---
+
+## Project Structure
+
+```
+src/
+├── hooks/
+│   └── useSimulation.js      # Core simulation engine (pods, queue, HPA, healing)
+├── components/
+│   ├── Navbar.jsx             # Top navigation bar
+│   ├── KubernetesCluster.jsx  # Pod grid visualization
+│   ├── KafkaQueue.jsx         # Queue depth visualization
+│   ├── PodCard.jsx            # Individual pod status card
+│   ├── LogPanel.jsx           # Event log with clear action
+│   └── SimControls.jsx        # Consumer speed & HPA threshold sliders
+├── pages/
+│   ├── SimulationPage.jsx     # Main simulator orchestrator
+│   ├── AboutPage.jsx          # Concept reference page
+│   └── NotFound.jsx           # 404 fallback
+├── constants/
+│   └── simulation.js          # Timing constants, initial state, mock users
+└── index.css                  # Design system (tokens, dark theme, animations)
+```
+
+---
+
+## Getting Started
 
 ```bash
-# 1. Install dependencies
+# Install dependencies
 npm install
 
-# 2. Start the local development server with HMR enabled
+# Start development server (localhost:5173)
 npm run dev
+
+# Production build
+npm run build
+```
+
+---
+
+## Simulation Guide
+
+| Action | What to observe |
+|---|---|
+| Click **"จองตั๋วคอนเสิร์ต"** once | Request enters Kafka queue → consumed by a pod → booking counter increments |
+| Click **4–5 times rapidly** | Queue depth exceeds HPA threshold → 2 new pods spin up (Pending → Running) |
+| Wait ~10 seconds | Queue drains → HPA scales down to baseline pod count |
+| Click **"ทำให้เซิร์ฟเวอร์ล่ม"** | Pod crashes → Kubernetes removes it → new pod self-heals within 1.5s |
+| Drag **Consumer Speed** slider | Observe queue backlog build or drain faster |
+| Drag **HPA Threshold** slider | Lower = scale-up triggers sooner under load |
+
+---
+
+## Concepts Demonstrated
+
+- **Asynchronous messaging** — fire-and-forget with `202 Accepted`, decoupled processing
+- **Event-driven architecture** — producer/consumer separation via a message queue
+- **Horizontal scaling** — stateless pods added dynamically based on observed load
+- **Fault tolerance & self-healing** — automated failure detection and pod replacement
+- **Single-Page Application routing** — client-side navigation without full page reloads
+
+---
+
+*Built as a conceptual learning tool. No real Kafka brokers, Kubernetes clusters, or backend servers are used.*

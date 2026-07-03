@@ -1,22 +1,19 @@
+import PodCard from "./PodCard";
+
 export default function KubernetesCluster({ pods }) {
+  const running = pods.filter((p) => p.status === "Running").length;
+
   return (
     <section className="k8s-cluster" aria-label="Kubernetes Cluster">
-      <h3 className="k8s-cluster__title">☸️ คลัสเตอร์ Kubernetes (Docker Containers)</h3>
+      <div className="section-header">
+        <h3 className="section-title">☸️ Kubernetes Cluster</h3>
+        <span className="section-badge">
+          {running}/{pods.length} Pods ทำงานอยู่
+        </span>
+      </div>
       <div className="pod-grid">
         {pods.map((pod) => (
-          <div
-            key={pod.id}
-            className={`pod pod--${pod.status.toLowerCase()}`}
-            aria-label={`${pod.name} สถานะ ${pod.status}`}
-          >
-            <div className="pod__name">🐳 {pod.name}</div>
-            <div className={`pod__status pod__status--${pod.status.toLowerCase()}`}>
-              ● {pod.status}
-            </div>
-            <div className="pod__count">
-              สับไปแล้ว: <b>{pod.processedCount}</b> งาน
-            </div>
-          </div>
+          <PodCard key={pod.id} pod={pod} />
         ))}
       </div>
     </section>

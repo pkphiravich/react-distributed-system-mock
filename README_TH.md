@@ -1,42 +1,131 @@
-# 🎫ระบบจำลอง Distributed System (React Router SPA)
+# ระบบจำลอง Distributed System — React SPA
 
-[🇺🇸 Read in English](README.md) | 🇹🇭 **ภาษาไทย**
-
----
-
-โปรเจกต์ขนาดเล็กที่สร้างขึ้นมาเพื่อจำลองสถาปัตยกรรมระบบกระจายศูนย์ (**Distributed Systems**) และคอนเซปต์ฝั่งโครงสร้างพื้นฐาน (Infrastructure) ระดับสูงอย่าง **Apache Kafka**, **Kubernetes (K8s)** และ **Docker Containers** ให้ออกมาเห็นภาพการทำงานได้ภายในหน้าจอเดียว ในรูปแบบของ React Single Page Application (SPA)
+[🇺🇸 English](README.md) | 🇹🇭 **ภาษาไทย**
 
 ---
 
-## ภาพรวมแนวคิด (Concept Overview)
-การทำความเข้าใจระบบฝั่งหลังบ้านในทฤษฎี เช่น เรื่อง **High Concurrency (การทำงานพร้อมกันสูง)**, **Message Queues (คิวส่งสาร)** หรือ **Infrastructure Scaling (การขยายระบบ)** มักจะเข้าใจได้ยาก โปรเจกต์นี้จึงใช้พลังของ React State และ React Router v6 มาทำการจำลอง (Mock) สถาปัตยกรรมเหล่านั้นให้ออกมาเป็น Visual Logs และกราฟิกโครงสร้างที่มองเห็นภาพและเข้าใจได้ทันทีแบบ **At first glance!**
+โปรเจกต์นี้คือการจำลองพฤติกรรมของโครงสร้างพื้นฐานหลังบ้าน (Backend Infrastructure) แบบ Interactive สร้างด้วย React โดยไม่ต้องพึ่งพาเซิร์ฟเวอร์จริง, Cloud Account, หรือ DevOps Toolchain ใด ๆ ทั้งสิ้น
+
+ระบบนี้จำลองการทำงานของ **Apache Kafka**, **Kubernetes (K8s)** และ **Containerized Microservices** เพื่อช่วยให้นักพัฒนาสร้างความเข้าใจเชิงสัญชาตญาณ (Intuition) เกี่ยวกับพฤติกรรมของระบบ High-Concurrency ภายใต้สถานการณ์โหลดสูง, ความล้มเหลว และการฟื้นตัวของระบบ
 
 ---
 
-## ฟีเจอร์จำลองและการทดลองเล่น (Interactive Features)
-เมื่อคุณรันโปรเจกต์ขึ้นมาในเครื่องแล้ว คุณสามารถกดปุ่มเพื่อกระตุ้นและสังเกตพฤติกรรมของระบบอินฟราฯ ได้ดังนี้:
+## สถาปัตยกรรมระบบ (Architecture)
 
-1. **🎟️ กดจองตั๋วคอนเสิร์ต (High Concurrency):** เมื่อกดปุ่ม ระบบจะจำลองสายพานทำงานแบบ Asynchronous โดยโยนคำสั่งซื้อเข้าฝั่ง **Apache Kafka (กล่องส้ม)** ทันที ซึ่งเซิร์ฟเวอร์จะตอบกลับด้วยรหัสสถานะ `202 Accepted` ในเสี้ยววินาทีเพื่อป้องกันไม่ให้หน้าเว็บ (UI) ค้างหมุนติ้ว จากนั้นตัว Consumer หลังบ้านจะค่อย ๆ แอบมาดึงงานไปประมวลผลเงียบ ๆ ตามลำดับ
-2. **⚡ ถล่มระบบ (กดปุ่มจองรัว ๆ 3-4 ครั้งติดต่อกัน):** เมื่อมีออเดอร์สะสมในท่อ Kafka หนาแน่น ระบบจำลองของ **Kubernetes จะสั่งเปิดฟีเจอร์ Horizontal Pod Autoscaling (HPA) เพื่อสเกลงอกเครื่องเซิร์ฟเวอร์หลังบ้าน (กล่องสีฟ้า) เพิ่มอัตโนมัติ** เพื่อช่วยกันสับกระจายงานขนาดยักษ์
-3. **💥 แกล้งทำเซิร์ฟเวอร์ล่ม (Self-Healing Mechanism):** พอกดปุ่มสีแดง จะเป็นการบังคับให้เซิร์ฟเวอร์หลักเกิดบั๊กแครชเสียหาย (จำลองรหัสข้อผิดพลาด `500 Internal Server Error`) แต่ภายใน 1.5 วินาที **Kubernetes อัจฉริยะจะตรวจพบความเสียหายและทำการกู้ระบบตัวเอง (Self-heals)** โดยเสกตู้คอนเทนเนอร์ใบใหม่ขึ้นมาแทนที่ทันที เพื่อให้ระบบทำงานต่อได้อย่างไร้รอยต่อ
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     React SPA (ฝั่ง Client)                  │
+│                                                             │
+│   การกระทำของผู้ใช้                                          │
+│       │                                                     │
+│       ▼                                                     │
+│  [ Kafka Queue ]  ──────────────►  [ Kubernetes Cluster ]  │
+│  (ตัวกลางรับส่งข้อความ)              (จัดการ Pod)             │
+│  • รับงานแบบ Async                  • Auto-scaling (HPA)    │
+│  • ตอบกลับ 202 Accepted             • Self-healing          │
+│  • Consumer Loop ดึงงาน             • กระจายโหลด            │
+│                                                             │
+│   ตัวนับจำนวนการจองติดตามยอดตั๋วที่จองไปทั้งหมด               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+State การจำลองทั้งหมดบริหารจัดการผ่าน Custom Hook ชื่อ `useSimulation` ไม่มี API หรือ Backend จริงเข้ามาเกี่ยวข้อง
 
 ---
 
-## หัวข้อเทคนิคที่ได้เรียนรู้จากโปรเจกต์นี้
-* **Front-end Client-Side Routing:** React Router v6 (การรักษา State ของหน้าเว็บ SPA ไม่ให้ถูกทำลาย)
-* **Message Brokering & Event Streaming:** Apache Kafka (รูปแบบสถาปัตยกรรม Publish-Subscribe)
-* **Container Orchestration:** Kubernetes (การขยายตัวอัตโนมัติ, การซ่อมแซมตัวเอง, และความเสถียรของระบบ)
-* **Development Workflow:** การตั้งค่า Vite Hot Module Replacement (HMR) ร่วมกับ File Polling เพื่อตรวจจับไฟล์บน Windows
+## ฟีเจอร์หลัก
+
+### 🎟️ จองตั๋วพร้อมตัวนับแบบ Real-time
+แต่ละครั้งที่กดปุ่ม **"จองตั๋วคอนเสิร์ต"** ระบบจะโยนคำสั่งจองเข้าสู่ Kafka Topic แบบ Async และเพิ่มตัวนับยอดการจองทันที สะท้อนจำนวนตั๋วที่จองไปแล้วทั้งหมดในเซสชันนั้น
+
+### ⚡ Horizontal Pod Autoscaling (HPA)
+เมื่อความลึกของคิว (Queue Depth) เกินค่า HPA Threshold ที่กำหนด Kubernetes จะสร้าง Backend Pod เพิ่มอัตโนมัติ (`Pending → Running`) เพื่อรองรับโหลดที่พุ่งสูง และ Scale ลงกลับสู่ขนาดปกติเมื่อคิวว่าง
+
+### 💥 จำลองเซิร์ฟเวอร์ล่มและ Self-Healing
+การสั่งให้เซิร์ฟเวอร์ล่มจะเปลี่ยนสถานะ Pod เป็น `Terminating` แล้วลบออก จากนั้น Kubernetes จะสร้าง Pod ใหม่ขึ้นมาแทนที่โดยอัตโนมัติ — จำลองพฤติกรรม Liveness Probe และ Restart Policy ภายใน 1.5 วินาที
+
+### 📊 ปรับพารามิเตอร์การจำลองได้
+- **Consumer Speed** — ปรับความเร็วการประมวลผลของ Kafka Consumer (0.5 – 5 วินาที)
+- **HPA Threshold** — กำหนดความลึกคิวที่จะกระตุ้น Scale-up (2 – 5 รายการ)
+
+### 📝 บันทึก Activity Log แบบถาวร
+เหตุการณ์ทุกอย่างในระบบ (การจอง, Scale-up/down, เซิร์ฟเวอร์ล่ม, การฟื้นตัว) จะถูกบันทึกพร้อม Timestamp แบบ Thai Locale และเก็บไว้ใน `localStorage` แม้รีเฟรชหน้าเว็บ
 
 ---
 
-## 📦 วิธีการติดตั้งและรันในเครื่อง (Getting Started)
+## เทคโนโลยีที่ใช้
 
-พิมพ์คำสั่งชุดนี้ใน Terminal เครื่องคุณเพื่อเปิดห้องแล็บทดลองระบบกระจายศูนย์:
+| ชั้น | เทคโนโลยี |
+|---|---|
+| Framework | React 19 (Hooks-based ทั้งหมด ไม่มี Class Component) |
+| Routing | React Router v6 (Client-side SPA) |
+| Build Tool | Vite 6 (HMR, File Polling สำหรับ WSL/Windows) |
+| Styling | Vanilla CSS (Design Tokens, Dark Theme, BEM) |
+| State | `useState`, `useRef`, `useCallback`, `useEffect` |
+| Persistence | `localStorage` (เก็บประวัติ Log) |
+
+---
+
+## โครงสร้างโปรเจกต์
+
+```
+src/
+├── hooks/
+│   └── useSimulation.js      # เครื่องจักรจำลองหลัก (pods, queue, HPA, healing)
+├── components/
+│   ├── Navbar.jsx             # แถบนำทางด้านบน
+│   ├── KubernetesCluster.jsx  # แสดงกริด Pod
+│   ├── KafkaQueue.jsx         # แสดงความลึกของคิว
+│   ├── PodCard.jsx            # การ์ดแสดงสถานะ Pod แต่ละตัว
+│   ├── LogPanel.jsx           # บันทึก Event พร้อมปุ่มล้าง
+│   └── SimControls.jsx        # Slider ปรับความเร็ว Consumer และ HPA Threshold
+├── pages/
+│   ├── SimulationPage.jsx     # หน้าหลักของระบบจำลอง
+│   ├── AboutPage.jsx          # หน้าอธิบายแนวคิด
+│   └── NotFound.jsx           # หน้า 404
+├── constants/
+│   └── simulation.js          # ค่าคงที่ Timing, State เริ่มต้น, Mock Users
+└── index.css                  # Design System (Tokens, Dark Theme, Animations)
+```
+
+---
+
+## วิธีติดตั้งและรันโปรเจกต์
 
 ```bash
-# 1. ติดตั้งไลบรารีทั้งหมด
+# ติดตั้ง Dependencies
 npm install
 
-# 2. รันเซิร์ฟเวอร์จำลองในเครื่องพร้อมเปิดระบบ Auto-reload สด ๆ ร้อน ๆ
+# รัน Development Server (localhost:5173)
 npm run dev
+
+# Build สำหรับ Production
+npm run build
+```
+
+---
+
+## คู่มือทดสอบระบบ
+
+| การกระทำ | สิ่งที่จะเห็น |
+|---|---|
+| กด **"จองตั๋วคอนเสิร์ต"** ครั้งเดียว | คำสั่งเข้า Kafka → Pod รับไปประมวลผล → ตัวนับการจองเพิ่มขึ้น |
+| กด **4–5 ครั้งรัว ๆ** | คิวเกิน HPA Threshold → Pod ใหม่ 2 ตัว Spin up (Pending → Running) |
+| รอ ~10 วินาที | คิวว่าง → HPA Scale down กลับสู่จำนวน Pod ปกติ |
+| กด **"ทำให้เซิร์ฟเวอร์ล่ม"** | Pod เปลี่ยนเป็น Terminating → ลบออก → Pod ใหม่ Self-heal ภายใน 1.5 วินาที |
+| เลื่อน **Slider Consumer Speed** | สังเกตคิวสะสมหรือระบายออกเร็วขึ้น |
+| เลื่อน **Slider HPA Threshold** | ค่าต่ำ = Scale-up กระตุ้นได้ง่ายขึ้นภายใต้โหลด |
+
+---
+
+## แนวคิดที่โปรเจกต์นี้สาธิต
+
+- **Asynchronous Messaging** — Fire-and-forget พร้อม `202 Accepted` และการประมวลผลแบบแยกอิสระ
+- **Event-Driven Architecture** — แยก Producer/Consumer ออกจากกันผ่าน Message Queue
+- **Horizontal Scaling** — เพิ่ม Stateless Pod แบบ Dynamic ตามโหลดที่สังเกตได้จริง
+- **Fault Tolerance & Self-Healing** — ตรวจจับความล้มเหลวและแทนที่ Pod โดยอัตโนมัติ
+- **Single-Page Application Routing** — นำทางฝั่ง Client โดยไม่ต้องโหลดหน้าใหม่
+
+---
+
+*สร้างขึ้นเป็นเครื่องมือเรียนรู้เชิงแนวคิด ไม่มี Kafka Broker, Kubernetes Cluster, หรือเซิร์ฟเวอร์จริงในระบบนี้*
